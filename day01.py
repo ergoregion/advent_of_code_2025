@@ -33,6 +33,5 @@ for n in lines:
         dial = (dial + (sign * 1)) % 100
         if (dial == 0):
             count = count+1
-    print(f"count at {n} : {count}")
 
 print(count)
