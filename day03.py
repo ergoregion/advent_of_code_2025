@@ -5,7 +5,7 @@ with open('data/day03.txt', 'r') as file:
     real_lines = file.readlines()
 
 
-#lines = test_lines
+# lines = test_lines
 lines = real_lines
 
 
@@ -13,7 +13,7 @@ print(test_lines)
 
 banks = lines
 
-result=0
+result = 0
 for bank in banks:
     batteries = [int(i) for i in list(bank.strip())]
     print(batteries)
@@ -23,24 +23,21 @@ for bank in banks:
     biggest_units_index = batteries.index(biggest_units_value)
     print(biggest_tens_value, biggest_units_value)
     output = 10*biggest_tens_value+biggest_units_value
-    result =result+output
+    result = result+output
 print(f"result part 1 {result}")
 
-total_times=12
+total_times = 12
 
-
-result=0
+result = 0
 for bank in banks:
     batteries = [int(i) for i in list(bank.strip())]
-    used_index= 0
+    used_index = 0
     for i in range(total_times):
-        reemaining_digets = total_times-i-1
-        new_array = batteries[used_index:] if reemaining_digets==0 else batteries[used_index:-reemaining_digets]
-        biggest_value  = max(new_array)
-        at_index =new_array.index(biggest_value)
+        remaining_digits = total_times-i-1
+        new_array = batteries[used_index:] if remaining_digits == 0 else batteries[used_index:-remaining_digits]
+        biggest_value = max(new_array)
+        at_index = new_array.index(biggest_value)
         used_index = used_index+1+at_index
-
-        print(biggest_value)
-        output = pow(10,reemaining_digets) *biggest_value
-        result =result+output
+        output = pow(10, remaining_digits) * biggest_value
+        result = result+output
 print(f"result part 2 {result}")
