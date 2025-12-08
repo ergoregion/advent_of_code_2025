@@ -62,6 +62,12 @@ for _, a, b in pairs:
             circuits.remove(b_circuit)
             connections = connections+1
 
+    if connections == 10:
+        sizes = [len(c) for c in circuits]
+        sizes.sort(reverse=True)
+        print(sizes)
+        print(f"result after 10 connections: {sizes[0]*sizes[1]*sizes[2]}")
+
     if connections == 1000:
         sizes = [len(c) for c in circuits]
         sizes.sort(reverse=True)
