@@ -64,124 +64,19 @@ for p in problems:
 print(f"result part 1: {sum}")
 
 
-
-#def solve_2(current, options, target, total):
-#     
-#     if (target==current).all():
-#        return total
-#     if (target<current).any():
-#        return None
-#     if len(options) ==0:
-#         return None
-#     
-#     uppers = ((target-current)/options[0])
-#     limit = min([u for u in uppers if not np.isnan(u)])
-#
-#     possibilities = [solve_2(current+i*options[0], options[1:], target, total+i) for i in reversed(range(int(limit)+1))]
-#
-#     possibilities = [p for p in possibilities if p is not None]
-#
-#     if(len(possibilities)==0):
-#        return None
-#
-#     return min(possibilities)
-#
-#
-
-
-#def can_solve(current, target, options, presses_left):
-#    if (target==current).all():
-#        return True
-#    if presses_left == 0:
-#        return False
-#
-#    for o in options:
-#        if can_solve(current+o, target, options, presses_left-1):
-#            return True
-#    return False
-
-from itertools import combinations, product
-
-def solve2(target, options):
-
-    t = len(options)
-    mat = np.array(options).T
-
-    size =target.sum()
-    best = None
-
-    def arrays_sum_to_m(N, M):
-        if N == 1:
-            yield [M]
-            return
-        for x in range(M + 1):
-            for rest in arrays_sum_to_m(N - 1, M - x):
-                yield [x] + rest
-
-    def can_solve(s):
-
-        for comb in arrays_sum_to_m(len(options), s):
-            r = np.array(comb)
-            if (np.matmul(mat,r)==target).all():
-                return True
-
-
-    for l in range(target.max(), target.sum()):
-        if can_solve(l):
-            return l
-        else:
-            print(l)
-
-
-
-def solve_2(current, options, target, target_indecides):
-     
-    if (target==current).all():
-       return 0
-    if (target<current).any():
-       return None
-    if len(options) ==0:
-        return None
-    if len(target_indecides)==0:
-        return None
-    
-    t= target_indecides[0]
-     
-    this_need = (target-current)[t]
-    this_options = [o for o in options if o[t]==1]
-    this_options.sort(key=lambda a:a.sum(), reverse=True)
-
-
-    remaining_options = [o for o in options if o[t]==0]
-
-    best = None
-    for items in product(this_options, repeat=this_need):
-        new_current = current.copy()
-        for i in items:
-            new_current+= i
-
-        new_indicies = target_indecides[1:]
-        new_indicies.sort(key=lambda t: (target-new_current)[t])
-        a  = solve_2(new_current, remaining_options, target, new_indicies)
-        if a is not None and (best is None or a<best):
-            best =a
-    return best+this_need if best is not None else None
-
-
-
-
+from scipy.optimize import linprog
 
 sum =0 
 
-from tqdm import tqdm
 
-for p in tqdm(problems):
+for p in problems:
     target = np.array(p[2])
     options=p [3]
-    current = np.array([0 for _ in target])
-    target_indecides = list(range(len(target)))
-    target_indecides.sort(key=lambda t: target[t])
-    #sum += solve2(target, options)
-    sum += solve_2(current, options, target, target_indecides)
-    print(sum)
-print(f"result part 2: {sum}")
+
+    minimise =np.array([1 for i in options])
+        
+    A = np.array(options).T
+    bounds = [(0,None) for _ in options]
+    res = linprog(minimise, A_eq=A, b_eq=target, bounds=bounds, integrality=1)
+    sum += res.fun
+print(f"result part 2: {int(sum)}")
