@@ -16,7 +16,22 @@ split_lines = [[int(j) for j in l] for l in split_lines]
 split_lines = [(l[0],l[1]) for l in split_lines]
 print(split_lines)
 
-from itertools import combinations
+class CornerContraction:
+    def __init__(self, coords):
+        xs = list(set((x for x,_ in coords)))
+        ys = list(set((y for _,y in coords)))
+        xs.sort()
+        ys.sort()
+        self.contracted_x = dict((x, 2*i) for i, x in enumerate(xs))
+        self.contracted_y = dict((y, 2*i) for i, y in enumerate(ys))
+
+    def contract(self, a):
+        return self.contracted_x[a[0]], self.contracted_y[a[1]]
+    
+cc =  CornerContraction(split_lines)
+
+
+from itertools import combinations, pairwise
 
 areas=[]
 def area(a,b):
@@ -28,7 +43,7 @@ max_area=0
 for c in combinations(split_lines,2):
     a,b = c
     ar = area(a,b)
-    areas.append((ar,a,b))
+    areas.append((ar,cc.contract(a),cc.contract(b)))
     if(ar>max_area):
         max_area= ar
 
@@ -36,83 +51,51 @@ print(f"result part 1: {max_area}")
 
 areas.sort(reverse=True)
 
-black_listed_tiles = set()
 
-N = len(split_lines)
-for i in range(N):
-    ai, aj= split_lines[(i)%N]
-    bi, bj = split_lines[(i+1)%N]
-    if ai==bi:
-        if bj>aj:
-            x= ai+1
-            for y in range(aj+1, bj):
-                black_listed_tiles.add((x,y))
-        elif bj<aj:
-            x= ai-1
-            for y in range(bj+1, aj):
-                black_listed_tiles.add((x,y))
-    elif aj==bj:
-        if bi>ai:
-            y=aj-1
-            for x in range(ai+1, bi):
-                black_listed_tiles.add((x,y))
-        elif bi<ai:
-            y=aj+1
-            for x in range(bi+1, ai):
-                black_listed_tiles.add((x,y))
+red_tiles = [cc.contract(l) for l in split_lines]
 
-
-def inside_contains_key(a,b):
-    for x in range(min(ai,bi)+1, max(ai,bi)):
-        for y in range(min(aj,bj)+1, max(aj,bj)):
-            if (x,y) in split_lines:
-                return (x,y)
-    return None        
-
-
-def contains_bl_tile(a,b):
-    ai, aj= a
-    bi, bj = b
-    for x in [min(ai,bi), max(ai,bi)+1]:
-        for y in range(min(aj,bj), max(aj,bj)+1):
-            if (x,y) in black_listed_tiles:
-                return (x,y)
-    for x in range(min(ai,bi), max(ai,bi)+1):
-        for y in [min(aj,bj), max(aj,bj)+1]:
-            if (x,y) in black_listed_tiles:
-                return (x,y)
-    for x in range(min(ai,bi), max(ai,bi)+1):
-        for y in range(min(aj,bj), max(aj,bj)+1):
-            if (x,y) in black_listed_tiles:
-                return (x,y)
-    return None
+#find the perimeter
+perimeter_tiles = []
+for r1, r2 in pairwise(red_tiles+[red_tiles[0]]):
+    for x in range(min(r1[0],r2[0]), max(r1[0],r2[0])+1):
+        for y in range(min(r1[1],r2[1]), max(r1[1],r2[1])+1):
+            perimeter_tiles.append((x,y))
 
 
 
-from tqdm import tqdm
+red_tiles.sort()
+start = red_tiles[0]
+first_internal_node = (start[0]+1,start[1]+1)
 
-excluded_already =  52526
+# Flood fill into the bulk
+bulk = set()
+possible_bulk = set()
+possible_bulk.add(first_internal_node)
 
-for i in tqdm(range(len(areas))):
-    ar,a,b = areas[i]
-    if(i<excluded_already-20):
-        continue
-    if(inside_contains_key(a,b)is not None):
-        continue
-    if contains_bl_tile(a,b) is None:
+while len(possible_bulk)!=0:
+    node = possible_bulk.pop()
+    bulk.add(node)
+    for n in [(node[0]+1,node[1]), (node[0]-1,node[1]), (node[0],node[1]+1), (node[0],node[1]-1)]:
+        if n not in bulk and n not in perimeter_tiles:
+            possible_bulk.add(n)
+
+good_tiles = set(red_tiles)
+good_tiles = good_tiles.union(perimeter_tiles)
+good_tiles = good_tiles.union(bulk)
+
+def is_valid(ac,bc):
+    if (ac[0],bc[1]) not in good_tiles:
+                return False
+    if (bc[0],ac[1]) not in good_tiles:
+                return False
+    for x in range(min(ac[0],bc[0]), max(ac[0],bc[0])):
+        for y in range(min(ac[1],bc[1]), max(ac[1],bc[1])):
+            if (x,y) not in good_tiles:
+                return False
+    return True
+
+for ar,ac,bc in areas:
+            
+    if is_valid(ac,bc):
         print(f"result part 2: {ar}")
         break
-
-
-# max_area=0
-#for c in combinations(split_lines,2):
-#    a,b = c
-#    print(a)
-#    ar = area(a,b)
-#    if(ar>max_area):
-#        cbl = contains_bl_tile(a,b)
-#        if cbl is None:
-#            print(ar)
-#            max_area= ar
-#
-#print(f"result part 1: {max_area}")
